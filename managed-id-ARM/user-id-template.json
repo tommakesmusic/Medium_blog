@@ -6,7 +6,11 @@
             "defaultValue": "automation-account",
             "type": "String"
         },
-         "userAssigned_identity": {
+        "my_location": {
+            "defaultValue":"",
+            "type": "String"
+        },
+        "userAssigned_identity": {
             "defaultValue": "",
             "type": "String"
         }
@@ -17,12 +21,12 @@
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
             "name": "[parameters('automationAccount_name')]",
-            "location": "uksouth",
+            "location": "[parameters('my_location')]",
             "tags": {
-                "Owner": "watsont",
+                "Owner": "YOUR-NAME",
                 "Reason": "test",
                 "Lifespan": "temporary",
-                "Project": "UPDATE PROJECT TAG"
+                "Project": "MI-Auto-test"
             },
             "identity": {
                 "type": "UserAssigned",

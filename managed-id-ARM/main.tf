@@ -8,7 +8,7 @@ terraform {
       version = "~> 2.65"
     }
   }
-  # configure the backend since this will be run on a pipeline not local machine
+  # configure the backend if this will be run on a pipeline not local machine
   backend "azurerm" {}
 
   required_version = ">= 1.1.0"
@@ -20,31 +20,31 @@ provider "azurerm" {
 
 ### variables and data ###
 variable "environment" {
-  description = "Environment terraform is creating resources for"
+  description = "Environment terraform is creating resources for."
   type        = string
   default     = "-test"
 }
 
 variable "virtual-machine" {
-  description = "Names of VMs to control"
+  description = "Name of VM to control"
   type        = string
-  default     = "watsont-test-VM"
+  default     = "test-VM"
 }
 
 locals {
-  prefix = "watsont-sandbox-"
+  prefix = "sandbox-"
 
-  rg = "${local.prefix}rg"
+  rg = "${local.prefix}rg" # Use a suitable value for your own resource group
 
-  location = "uksouth"
+  location = "YOUR-LOCATION" # Use a suitable value for your own location
 
   automationAccount_name = "${local.prefix}AutomationAccount${var.environment}"
 
   my_tags = {
-    Owner    = "watsont"
+    Owner    = "your-name"
     Reason   = "test"
     Lifespan = "temporary"
-    Project  = "watsont-rg-test"
+    Project  = "MI-Auto-test"
   }
 }
 
@@ -72,8 +72,8 @@ output "new_managed_id" {
 
 # Give the user managed identity a role that allows it to do stuff
 # You must have permissions to grant the MI the needed role 
-resource "azurerm_role_assignment" "watsont-mi-role" {
-  scope                = "/subscriptions/4ac7e4ba-2b33-4c38-8852-1a6ba4098aa3/resourceGroups/watsont-sandbox-rg"
+resource "azurerm_role_assignment" "test-mi-role" {
+  scope                = "YOUR-SCOPE" # I used the resource group
   
   # built-in roles are available here: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
     role_definition_name = "Virtual Machine Contributor" # or
@@ -103,6 +103,9 @@ resource "azurerm_resource_group_template_deployment" "ARMdeploy-automation-acct
     "automationAccount_name" = {
       value = local.automationAccount_name
     },
+    "my_location" = {
+      value = local.location
+    },
     "userAssigned_identity" = {
       value = azurerm_user_assigned_identity.automation-account-managed-id.id
     }
@@ -112,7 +115,7 @@ resource "azurerm_resource_group_template_deployment" "ARMdeploy-automation-acct
 }
 
 # runbook for VM Start and Stop
-resource "azurerm_automation_runbook" "watsont-VM-runbook" {
+resource "azurerm_automation_runbook" "test-VM-runbook" {
   name                    = "Azure-MI-VM-Control"
   location                = local.location
   resource_group_name     = local.rg
@@ -127,7 +130,7 @@ resource "azurerm_automation_runbook" "watsont-VM-runbook" {
   # So we'll just add our runbook to the repo and link it here
   # Also the runbook must be on a public repo
   publish_content_link {
-    uri = "https://raw.githubusercontent.com/thomaswatsonv1/azure-runbooks/main/Azure-MI-VM-Control.ps1"
+    uri = "https://raw.githubusercontent.com/thomaswatsonv1/medium_blog_repos/main/managed-id-ARM/Azure-MI-VM-Control.ps1"
   }
   depends_on = [
     azurerm_resource_group_template_deployment.ARMdeploy-automation-acct
@@ -136,7 +139,7 @@ resource "azurerm_automation_runbook" "watsont-VM-runbook" {
 
 
 # For each runbook we may need to add the appropriate powershell modules into the account
-# For a managed identity we need to add this one.
+# For a managed identity functions we may need to add this one.
 resource "azurerm_automation_module" "Azure-MI-Automation-module" {
   name                    = "Az.ManagedServiceIdentity"
   resource_group_name     = local.rg
@@ -152,7 +155,7 @@ resource "azurerm_automation_module" "Azure-MI-Automation-module" {
 
 
 # Create a schedule for our VM Start
-resource "azurerm_automation_schedule" "watsont-VM-Start-schedule" {
+resource "azurerm_automation_schedule" "test-VM-Start-schedule" {
   name                    = "${local.prefix}automation-start-schedule"
   resource_group_name     = local.rg
   automation_account_name = local.automationAccount_name
@@ -173,8 +176,8 @@ resource "azurerm_automation_schedule" "watsont-VM-Start-schedule" {
 resource "azurerm_automation_job_schedule" "runbook-schedule-VM-Start" {
   resource_group_name     = local.rg
   automation_account_name = local.automationAccount_name
-  schedule_name           = azurerm_automation_schedule.watsont-VM-Start-schedule.name
-  runbook_name            = azurerm_automation_runbook.watsont-VM-runbook.name
+  schedule_name           = azurerm_automation_schedule.test-VM-Start-schedule.name
+  runbook_name            = azurerm_automation_runbook.test-VM-runbook.name
 
   # parameters:
   # Most are obvious but
@@ -186,12 +189,12 @@ resource "azurerm_automation_job_schedule" "runbook-schedule-VM-Start" {
     resourcegroup         = local.rg
     action                = "Start"
   }
-  depends_on = [azurerm_automation_schedule.watsont-VM-Start-schedule]
+  depends_on = [azurerm_automation_schedule.test-VM-Start-schedule]
 }
 
 
 # Create a schedule for VM Stop
-resource "azurerm_automation_schedule" "watsont-VM-Stop-schedule" {
+resource "azurerm_automation_schedule" "test-VM-Stop-schedule" {
   name                    = "${local.prefix}automation-stop-schedule"
   resource_group_name     = local.rg
   automation_account_name = local.automationAccount_name
@@ -210,8 +213,8 @@ resource "azurerm_automation_schedule" "watsont-VM-Stop-schedule" {
 resource "azurerm_automation_job_schedule" "runbook-schedule-VM-Stop" {
   resource_group_name     = local.rg
   automation_account_name = local.automationAccount_name
-  schedule_name           = azurerm_automation_schedule.watsont-VM-Stop-schedule.name
-  runbook_name            = azurerm_automation_runbook.watsont-VM-runbook.name
+  schedule_name           = azurerm_automation_schedule.test-VM-Stop-schedule.name
+  runbook_name            = azurerm_automation_runbook.test-VM-runbook.name
   
   # parameters:
   # Most are obvious but
@@ -223,5 +226,5 @@ resource "azurerm_automation_job_schedule" "runbook-schedule-VM-Stop" {
     resourcegroup         = local.rg
     action                = "Stop"
   }
-  depends_on = [azurerm_automation_schedule.watsont-VM-Stop-schedule]
+  depends_on = [azurerm_automation_schedule.test-VM-Stop-schedule]
 }
