@@ -2,8 +2,11 @@ A public repository for code from posts on Medium.
 
 This is for the post:
 
-* Creating an Automation Account with a User-assigned Managed Identity:
+## Creating an Automation Account with a User-assigned Managed Identity:
 * https://medium.com/@thomaswatsonv1/deploying-an-automation-account-with-a-user-assigned-managed-identity-709424d6cdfe
+* https://medium.com/@thomaswatsonv1/using-user-assigned-managed-identities-in-azure-automation-runbooks-94000904e8b0
+* https://medium.com/@thomaswatsonv1/creating-a-custom-role-for-an-azure-managed-identity-de861e06a8da
+
 ## Requirements
 
 | Name | Version |
