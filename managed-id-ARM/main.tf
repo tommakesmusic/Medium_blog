@@ -130,7 +130,7 @@ resource "azurerm_automation_runbook" "test-VM-runbook" {
   # So we'll just add our runbook to the repo and link it here
   # Also the runbook must be on a public repo
   publish_content_link {
-    uri = "https://raw.githubusercontent.com/thomaswatsonv1/medium_blog_repos/main/managed-id-ARM/Azure-MI-VM-Control.ps1"
+    uri = "https://raw.githubusercontent.com/tommakesmusic/Medium_blog/main/managed-id-ARM/Azure-MI-VM-Control.ps1"
   }
   depends_on = [
     azurerm_resource_group_template_deployment.ARMdeploy-automation-acct
